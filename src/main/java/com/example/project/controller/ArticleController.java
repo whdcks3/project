@@ -5,11 +5,11 @@ import com.example.project.entity.Article;
 import com.example.project.repository.ArticleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
@@ -58,16 +58,12 @@ public class ArticleController {
     }
     // 수정된 데이터 저장
     @PostMapping("/articles/update")
-    public String update(ArticleForm form){
-        Article articleEntity = form.toEntity();
-        Optional<Article> target = articleRepository.findById(articleEntity.getId());
-        if (target.isPresent()){
-            Article article= target.get();
-            articleRepository.save(article);
-        }
-        return "redirect:/articles/"+ articleEntity.getId();
+    public String update(@ModelAttribute ArticleForm form){
+        Article article = articleRepository.save(form.toEntity());
+        return "redirect:/articles/"+ article.getId();
 
     }
+
     // 회원 데이터 삭제
     @GetMapping("/articles/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes rttr){
@@ -77,7 +73,6 @@ public class ArticleController {
             articleRepository.delete(article);
             rttr.addFlashAttribute("msg","삭제됐습니다.");
         }
-
         return "redirect:/articles";
     }
 
