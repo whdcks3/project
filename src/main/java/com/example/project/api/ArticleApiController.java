@@ -12,45 +12,60 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @Slf4j
 @RestController
 public class ArticleApiController {
-
+    @Autowired
+    private ArticleService articleService;
     @Autowired
     private ArticleRepository articleRepository;
-    private ArticleService articleService;
-    // 모든 데이터 검색
+
+    // 전체데이터 조회
     @GetMapping("/api/articles")
-    public Iterable<Article> index(){
+    public Iterable<Article> index() {
         return articleService.index();
     }
-    // 특정 데이터 검색
+    // 단일데이터 조회
     @GetMapping("/api/articles/{id}")
     public Article show(@PathVariable Long id){
         return articleService.show(id);
     }
-    // 데이터 추가 요청
+
+    // 데이터 등록
     @PostMapping("/api/articles")
     public ResponseEntity<Article> create(@RequestBody ArticleForm dto){
-        Article created = articleService.create(dto);
+        Article created =articleService.create(dto);
+        // created 가 null 값일 때 처리
         return (created !=null) ?
-                ResponseEntity.status(HttpStatus.OK).body(created) :
+                ResponseEntity.status(HttpStatus.OK).body(created):
                 ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
-    // 데이터 일부 수정 요청
-    @PatchMapping("api/articles/{id}")
-    public ResponseEntity<Article> update(@PathVariable Long id, @RequestBody ArticleForm dto) {
+
+    // 데이터 수정
+    @PatchMapping("/api/articles/{id}")
+    public ResponseEntity<Article> update(@PathVariable Long id, @RequestBody ArticleForm dto){
         Article updated = articleService.update(id,dto);
-        return (updated !=null) ?
-                ResponseEntity.status(HttpStatus.OK).body(updated):
-                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    // 삭제 요청
+        // updated 가 null 값일 때 처리
+        return (updated !=null)?
+            ResponseEntity.status(HttpStatus.OK).body(updated):
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
     @DeleteMapping("/api/articles/{id}")
     public ResponseEntity<Article> delete(@PathVariable Long id){
+        // 서비스를 통해 게시글 삭제
         Article deleted = articleService.delete(id);
         return (deleted !=null) ?
-                ResponseEntity.status(HttpStatus.OK).body(deleted):
+                ResponseEntity.status(HttpStatus.NO_CONTENT).build():
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+    // 동시에 생성 요청 받았을 때 (트랜잭션 이용)
+    @PostMapping("/api/transaction-test")
+    public ResponseEntity<List<Article>> transactionTest(@RequestBody List<ArticleForm> dtos){
+        List<Article> createdList = articleService.createArticles(dtos);
+        return (createdList !=null)?
+                ResponseEntity.status(HttpStatus.OK).body(createdList):
                 ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 }
